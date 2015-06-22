@@ -12,15 +12,14 @@ _OFFICE365_user = sys.argv[1]
 _OFFICE365_pwd = sys.argv[2]
 _SEND_FOLDER = 'send'
 _RECEIVER = sys.argv[3]
-
 _DOMAIN = _OFFICE365_user.split('@')[1]
+_MAIL_SERVER = "smtp.office365.com"
 
 def find_files_in_folder():
 	f = []
 	for (dirpath, dirnames, filenames) in walk(_SEND_FOLDER):
 		f.extend(filenames)
 		break
-
 	return f
 
 
@@ -39,7 +38,7 @@ def send_message(receiver, subject, body, att_file):
 	att.add_header('Content-Disposition','attachment',filename=filename)
 	msg.attach(att)
 
-	smtpserver = smtplib.SMTP("smtp.office365.com",587)
+	smtpserver = smtplib.SMTP(_MAIL_SERVER,587)
 	smtpserver.ehlo(_DOMAIN)
 	smtpserver.starttls()
 	smtpserver.ehlo(_DOMAIN)
