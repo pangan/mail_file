@@ -14,6 +14,7 @@ _SEND_FOLDER = 'send'
 _RECEIVER = sys.argv[3]
 _DOMAIN = _OFFICE365_user.split('@')[1]
 _MAIL_SERVER = "smtp.office365.com"
+_SUBJECT = sys.argv[4]
 
 def find_files_in_folder():
 	f = []
@@ -23,11 +24,11 @@ def find_files_in_folder():
 	return f
 
 
-def send_message(receiver, subject, body, att_file):
+def send_message(receiver, body, att_file):
 	msg = MIMEMultipart('alternative')
 	to = receiver
 
-	msg["Subject"] = subject
+	msg["Subject"] = _SUBJECT
 	msg["From"] = _OFFICE365_user
 	content = MIMEText(body,'plain')
 	msg.attach(content)
@@ -50,7 +51,7 @@ def send_message(receiver, subject, body, att_file):
 for s_file in find_files_in_folder():
 	print s_file
 	try:
-		send_message(_RECEIVER, 'Test 2', 'Ok its working', s_file)
+		send_message(_RECEIVER, 'Ok its working', s_file)
 	except Exception, e:
 		print "Error! %s" %e
 	else: 
