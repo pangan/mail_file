@@ -29,21 +29,11 @@ def _handle_opts():
 
 	return parser
 
-def _check_opts(options):
-	if not options.rec_email:
-		return False
-	elif not options.from_email:
-		return False
-	elif not options.password:
-		return False
-	elif not options.subject:
-		return False
-	elif not options.dir:
-		return False
-	elif not options.body:
-		return False
+def _check_opts(options,parser):
+	for key,value in options.__dict__.items():
+		if not value:
+			parser.error("All mandatory options are necessary! use -h for help!")
 
-	return True
 
 def find_files_in_folder():
 	f = []
@@ -80,7 +70,8 @@ def send_message(receiver, body, att_file):
 
 parser = _handle_opts()
 options,args = parser.parse_args()
-if args or not (_check_opts(options)):
+_check_opts(options,parser)
+if args:
 	parser.print_help()
 else:
 	_OFFICE365_user = options.from_email
