@@ -5,16 +5,45 @@ import email.mime.application
 from os import walk
 import os
 import sys
+from optparse import OptionParser
+
+_VERSION = "%prog 1.1"
 
 
+def _handle_opts():
+	parser = OptionParser(usage='usage: python %prog [option]',version=_VERSION,
+		description='This is Description for %prog' 
+			)
+	parser.add_option('-t', '--to', action ='store', dest='rec_email', metavar ="EMAIL",
+		help= 'Receiver email address.')
+	parser.add_option('-f', '--from', action ='store', dest='from_email', metavar="EMAIL",
+		help= 'Sender email address.')
+	parser.add_option('-p', '--password', action ='store', dest='password', metavar="PASSWORD",
+		help= 'Sender password.')
+	parser.add_option('-s', '--subject', action ='store', dest='subject', metavar="SUBJECT",default=" ",
+		help= 'Subject of email. (optional)')
+	parser.add_option('-b', '--body', action ='store', dest='body', metavar="TEXT",default=" ",
+		help= 'Body of message. (optional)')
+	parser.add_option('-d', '--dir', action ='store', dest='dir', metavar="PATH",
+		help= 'Path for sending files.')
 
-_OFFICE365_user = sys.argv[1]
-_OFFICE365_pwd = sys.argv[2]
-_SEND_FOLDER = 'send'
-_RECEIVER = sys.argv[3]
-_DOMAIN = _OFFICE365_user.split('@')[1]
-_MAIL_SERVER = "smtp.office365.com"
-_SUBJECT = sys.argv[4]
+	return parser
+
+def _check_opts(options):
+	if not options.rec_email:
+		return False
+	elif not options.from_email:
+		return False
+	elif not options.password:
+		return False
+	elif not options.subject:
+		return False
+	elif not options.dir:
+		return False
+	elif not options.body:
+		return False
+
+	return True
 
 def find_files_in_folder():
 	f = []
@@ -30,6 +59,7 @@ def send_message(receiver, body, att_file):
 
 	msg["Subject"] = _SUBJECT
 	msg["From"] = _OFFICE365_user
+	msg["To"] = to
 	content = MIMEText(body,'plain')
 	msg.attach(content)
 	filename = att_file
@@ -44,18 +74,31 @@ def send_message(receiver, body, att_file):
 	smtpserver.starttls()
 	smtpserver.ehlo(_DOMAIN)
 	smtpserver.login(_OFFICE365_user,_OFFICE365_pwd)
-	smtpserver.sendmail(_OFFICE365_user, to, msg.as_string())
+	smtpserver.sendmail(_OFFICE365_user, to.split(","), msg.as_string())
 	smtpserver.close()
 
 
-for s_file in find_files_in_folder():
-	print s_file
-	try:
-		send_message(_RECEIVER, 'Ok its working', s_file)
-	except Exception, e:
-		print "Error! %s" %e
-	else: 
-		os.remove("%s/%s" %(_SEND_FOLDER, s_file))
-		print "Done!"
+parser = _handle_opts()
+options,args = parser.parse_args()
+if args or not (_check_opts(options)):
+	parser.print_help()
+else:
+	_OFFICE365_user = options.from_email
+	_OFFICE365_pwd = options.password
+	_SEND_FOLDER = options.dir
+	_RECEIVER = options.rec_email
+	_DOMAIN = _OFFICE365_user.split('@')[1]
+	_MAIL_SERVER = "smtp.office365.com"
+	_SUBJECT = options.subject
+	_BODY = options.body
+	for s_file in find_files_in_folder():
+		print "%s -> %s " %(s_file,_RECEIVER)
+		try:
+			send_message(_RECEIVER, _BODY, s_file)
+		except Exception, e:
+			print "Error! %s" %e
+		else: 
+			os.remove("%s/%s" %(_SEND_FOLDER, s_file))
+			print "Done!"
 
 
